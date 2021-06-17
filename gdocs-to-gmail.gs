@@ -1,5 +1,11 @@
 var state = {
   body: DocumentApp.getActiveDocument().getBody(),
+  isParsingActivated: false,
+  currentElement: {
+    obj: null,
+    text: null
+  },
+  returnHtml: '',
   rangeMarkers: {
     begin: '===CUSTOM_EMAIL_CONTENTS_BEGIN===',
     end: '===CUSTOM_EMAIL_CONTENTS_END==='
@@ -14,18 +20,38 @@ function onOpen() {
 }
 
 function convertToGmail() {
-  var str = '';
-  var isActive = false;
   var numElements = state.body.getNumChildren();
   for(var i = 0; i < numElements; i++) {
-    var element = state.body.getChild(i);
-    var elementText = element.asText().getText();
-    if(elementText == state.rangeMarkers.end) isActive = false;
-    if(isActive) str += element.getType() + ' ' + elementText + '\n';
-    if(elementText == state.rangeMarkers.begin) isActive = true;
+    assignCurrentElement(state.body.getChild(i));
+    deactivateParsingOnRangeEnd();
+    parseWhenActive();
+    activateParsingOnRangeBegin();
   }
 
-  DocumentApp.getUi().alert('convertToGmail called.\n\n' + wrap(str));
+  DocumentApp.getUi().alert(wrap(state.returnHtml));
+}
+
+function assignCurrentElement(element) {
+    state.currentElement.obj = element;
+    state.currentElement.text = element.asText().getText();
+}
+
+function parseWhenActive() {
+  if(state.isParsingActive) {
+    state.returnHtml += state.currentElement.obj.getType() + ' ' + state.currentElement.text + '\n';
+  }
+}
+
+function activateParsingOnRangeBegin() {
+  if(state.currentElement.text === state.rangeMarkers.begin) {
+    state.isParsingActive = true;
+  }
+}
+
+function deactivateParsingOnRangeEnd() {
+  if(state.currentElement.text === state.rangeMarkers.end) {
+    state.isParsingActive = false;
+  }
 }
 
 function wrap(bodyHtml) {
