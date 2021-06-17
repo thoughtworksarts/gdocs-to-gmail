@@ -24,5 +24,12 @@ function convertToGmail() {
     if(isActive) str += element.getType() + ' ' + elementText + '\n';
     if(elementText == state.rangeMarkers.begin) isActive = true;
   }
-  DocumentApp.getUi().alert('convertToGmail called.\n\n' + str);
+
+  DocumentApp.getUi().alert('convertToGmail called.\n\n' + wrap(str));
+}
+
+function wrap(bodyHtml) {
+  var headerHtml = HtmlService.createHtmlOutputFromFile('header').getContent();
+  var footerHtml = HtmlService.createHtmlOutputFromFile('footer').getContent();
+  return headerHtml + '\n' + bodyHtml + '\n' + footerHtml;
 }
