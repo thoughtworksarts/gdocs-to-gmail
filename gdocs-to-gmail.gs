@@ -1,5 +1,7 @@
 var state = {
-  body: DocumentApp.getActiveDocument().getBody(),
+  body: null,
+  testMode: false,
+  testDocId: '1cuJMBUi9vrV3hbbwaccHatglD4EkfLPA9G1jYF9qzTw',
   isParsingActivated: false,
   currentElement: {
     obj: null,
@@ -19,7 +21,21 @@ function onOpen() {
       .addToUi();
 }
 
+function testApp() {
+  state.testMode = true;
+  convertToGmail();
+}
+
+function loadDocument() {
+  if(state.testMode) {
+    state.body = DocumentApp.openById(state.testDocId).getBody();
+  } else {
+    state.body = DocumentApp.getActiveDocument().getBody();
+  }
+}
+
 function convertToGmail() {
+  loadDocument();
   var numElements = state.body.getNumChildren();
   for(var i = 0; i < numElements; i++) {
     assignCurrentElement(state.body.getChild(i));
@@ -28,7 +44,7 @@ function convertToGmail() {
     activateParsingOnRangeBegin();
   }
 
-  DocumentApp.getUi().alert(wrap(state.returnHtml));
+  showResult(wrap(state.returnHtml));
 }
 
 function assignCurrentElement(element) {
@@ -120,4 +136,12 @@ function wrap(bodyHtml) {
   var headerHtml = HtmlService.createHtmlOutputFromFile('header').getContent();
   var footerHtml = HtmlService.createHtmlOutputFromFile('footer').getContent();
   return headerHtml + '\n' + bodyHtml + '\n' + footerHtml;
+}
+
+function showResult(resultStr) {
+  if(state.testMode) {
+    Logger.log(resultStr);
+  } else {
+    DocumentApp.getUi().alert(resultStr);
+  }
 }
