@@ -99,7 +99,9 @@ function parseText(text) {
 
     returnHtml += attribute.BOLD ? '<b>' : '';
     returnHtml += attribute.ITALIC ? '<i>' : '';
+    returnHtml += attribute.LINK_URL ? '<a href="' + attribute.LINK_URL + '">' : '';
     returnHtml += substring;
+    returnHtml += attribute.LINK_URL ? '</a>' : '';
     returnHtml += attribute.BOLD ? '</b>' : '';
     returnHtml += attribute.ITALIC ? '</i>' : '';
   }
