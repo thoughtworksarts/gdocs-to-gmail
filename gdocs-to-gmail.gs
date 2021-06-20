@@ -9,6 +9,7 @@ var state = {
   },
   currentList: {
     isInProgress: false,
+    type: '',
     items: []
   },
   returnHtml: '',
@@ -147,16 +148,20 @@ function parseListItem(listItem) {
 
 function openListIfNeeded() {
   if(!state.currentList.isInProgress) {
+    var listItem = state.currentElement.obj.asListItem();
     state.currentList.isInProgress = true;
-    return '<div><ol>\n';
+    state.currentList.type = listItem.getGlyphType() === DocumentApp.GlyphType.NUMBER ? 'ol' : 'ul';
+    return '<div><' + state.currentList.type + '>\n';
   }
   return '';
 }
 
 function closeListIfNeeded() {
   if(state.currentList.isInProgress) {
+    var listItemType = state.currentList.type;
     state.currentList.isInProgress = false;
-    return '</ol></div>\n';
+    state.currentList.type = '';
+    return '</' + listItemType + '></div>\n';
   }
   return '';
 }
