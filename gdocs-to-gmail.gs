@@ -94,7 +94,9 @@ function parseParagraph(paragraph) {
         returnHtml += parseInlineImage(element.asInlineImage());
         break;
       case DocumentApp.ElementType.TEXT:
-        returnHtml += parseText(element.asText());
+        var heading = paragraph.getHeading();
+        var text = element.asText();
+        returnHtml += heading === DocumentApp.ParagraphHeading.NORMAL ? parseText(text) : parseHeading(text);
         break;
     }
   }
@@ -102,15 +104,20 @@ function parseParagraph(paragraph) {
   return returnHtml;
 }
 
-function parseText(text) {
+function parseHeading(textElement) {
+  var str = textElement.getText();
+  return '<div><font size="4"><b>' + str + '</b></font></div>\n';
+}
+
+function parseText(textElement) {
   var returnHtml = '<div>';
-  var str = text.getText();
-  var indices = text.getTextAttributeIndices();
+  var str = textElement.getText();
+  var indices = textElement.getTextAttributeIndices();
 
   for (var i = 0; i < indices.length; i++) {
     var attributeStartIndex = indices[i];
     var attributeEndIndex = (i + 1 < indices.length) ? indices[i + 1] : str.length;
-    var attribute = text.getAttributes(indices[i]);
+    var attribute = textElement.getAttributes(indices[i]);
     var substring = str.substring(attributeStartIndex, attributeEndIndex);
 
     returnHtml += attribute.BOLD ? '<b>' : '';
