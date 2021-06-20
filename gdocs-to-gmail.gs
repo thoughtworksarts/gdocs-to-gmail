@@ -7,6 +7,10 @@ var state = {
     obj: null,
     text: null
   },
+  currentList: {
+    isInProgress: false,
+    items: []
+  },
   returnHtml: '',
   rangeMarkers: {
     begin: '===CUSTOM_EMAIL_CONTENTS_BEGIN===',
@@ -73,11 +77,11 @@ function parseWhenActive() {
 function parse(element) {
   switch(element.getType()) {
     case DocumentApp.ElementType.PARAGRAPH:
-      return parseParagraph(element.asParagraph());
+      return closeListIfNeeded() + parseParagraph(element.asParagraph());
     case DocumentApp.ElementType.LIST_ITEM:
-      return parseListItem(element.asListItem());
+      return openListIfNeeded() + parseListItem(element.asListItem());
     default:
-      return '';
+      return closeListIfNeeded();
   }
 }
 
@@ -136,7 +140,25 @@ function parseInlineImage(inlineImage) {
 }
 
 function parseListItem(listItem) {
-  return 'LIST ITEM\n';
+  var returnHtml = '';
+  returnHtml += 'LIST_ITEM';
+  return returnHtml + '\n';
+}
+
+function openListIfNeeded() {
+  if(!state.currentList.isInProgress) {
+    state.currentList.isInProgress = true;
+    return '<div><ol>\n';
+  }
+  return '';
+}
+
+function closeListIfNeeded() {
+  if(state.currentList.isInProgress) {
+    state.currentList.isInProgress = false;
+    return '</ol></div>\n';
+  }
+  return '';
 }
 
 function wrap(bodyHtml) {
