@@ -12,7 +12,7 @@ var state = {
     type: '',
     items: []
   },
-  returnHtml: '',
+  outputLines: [],
   rangeMarkers: {
     begin: '===CUSTOM_EMAIL_CONTENTS_BEGIN===',
     end: '===CUSTOM_EMAIL_CONTENTS_END==='
@@ -45,11 +45,11 @@ function convertToGmail() {
   for(var i = 0; i < numElements; i++) {
     assignCurrentElement(state.body.getChild(i));
     deactivateParsingOnRangeEnd();
-    parseWhenActive();
+    parseWhileActive();
     activateParsingOnRangeBegin();
   }
 
-  showResult(wrap(state.returnHtml));
+  showResult();
 }
 
 function assignCurrentElement(element) {
@@ -69,53 +69,54 @@ function deactivateParsingOnRangeEnd() {
   }
 }
 
-function parseWhenActive() {
+function parseWhileActive() {
   if(state.isParsingActive) {
-    state.returnHtml += parse(state.currentElement.obj);
+    parse(state.currentElement.obj);
   }
 }
 
 function parse(element) {
   switch(element.getType()) {
     case DocumentApp.ElementType.PARAGRAPH:
-      return closeListIfNeeded() + parseParagraph(element.asParagraph());
+      closeListIfNeeded();
+      parseParagraph(element.asParagraph());
+      break;
     case DocumentApp.ElementType.LIST_ITEM:
-      return openListIfNeeded() + parseListItem(element.asListItem());
+      openListIfNeeded()
+      parseListItem(element.asListItem());
+      break;
     default:
-      return closeListIfNeeded();
+      closeListIfNeeded();
+      break;
   }
 }
 
 function parseParagraph(paragraph) {
   var numChildren = paragraph.getNumChildren();
-  if(numChildren === 0) return '<div><br></div>\n';
-
-  var returnHtml = '';
+  if(numChildren === 0) return '<br>';
 
   for(var i = 0; i < numChildren; i++) {
     var element = paragraph.getChild(i);
     switch(element.getType()) {
       case DocumentApp.ElementType.INLINE_IMAGE:
-        returnHtml += parseInlineImage(element.asInlineImage());
+        parseInlineImage(element.asInlineImage());
         break;
       case DocumentApp.ElementType.TEXT:
         var heading = paragraph.getHeading();
         var text = element.asText();
-        returnHtml += heading === DocumentApp.ParagraphHeading.NORMAL ? parseText(text) : parseHeading(text);
+        heading === DocumentApp.ParagraphHeading.NORMAL ? parseText(text) : parseHeading(text);
         break;
     }
   }
-
-  return returnHtml;
 }
 
 function parseHeading(textElement) {
   var str = textElement.getText();
-  return '<div><font size="4"><b>' + str + '</b></font></div>\n';
+  state.outputLines.push('<font size="4"><b>' + str + '</b></font>');
 }
 
 function parseText(textElement) {
-  var returnHtml = '<div>';
+  var html = '';
   var str = textElement.getText();
   var indices = textElement.getTextAttributeIndices();
 
@@ -125,25 +126,23 @@ function parseText(textElement) {
     var attribute = textElement.getAttributes(indices[i]);
     var substring = str.substring(attributeStartIndex, attributeEndIndex);
 
-    returnHtml += attribute.BOLD ? '<b>' : '';
-    returnHtml += attribute.ITALIC ? '<i>' : '';
-    returnHtml += attribute.LINK_URL ? '<a href="' + attribute.LINK_URL + '">' : '';
-    returnHtml += substring;
-    returnHtml += attribute.LINK_URL ? '</a>' : '';
-    returnHtml += attribute.BOLD ? '</b>' : '';
-    returnHtml += attribute.ITALIC ? '</i>' : '';
+    html += attribute.BOLD ? '<b>' : '';
+    html += attribute.ITALIC ? '<i>' : '';
+    html += attribute.LINK_URL ? '<a href="' + attribute.LINK_URL + '">' : '';
+    html += substring;
+    html += attribute.LINK_URL ? '</a>' : '';
+    html += attribute.BOLD ? '</b>' : '';
+    html += attribute.ITALIC ? '</i>' : '';
   }
-  return returnHtml + '</div>\n';
+  state.outputLines.push(html);
 }
 
 function parseInlineImage(inlineImage) {
-  return 'INLINE IMAGE\n';
+  state.outputLines.push('INLINE IMAGE');
 }
 
 function parseListItem(listItem) {
-  var returnHtml = '';
-  returnHtml += 'LIST_ITEM';
-  return returnHtml + '\n';
+  appendCurrentOutputLine('<li>LIST_ITEM</li>\n');
 }
 
 function openListIfNeeded() {
@@ -151,9 +150,8 @@ function openListIfNeeded() {
     var listItem = state.currentElement.obj.asListItem();
     state.currentList.isInProgress = true;
     state.currentList.type = listItem.getGlyphType() === DocumentApp.GlyphType.NUMBER ? 'ol' : 'ul';
-    return '<div><' + state.currentList.type + '>\n';
+    state.outputLines.push('<' + state.currentList.type + '>\n');
   }
-  return '';
 }
 
 function closeListIfNeeded() {
@@ -161,18 +159,23 @@ function closeListIfNeeded() {
     var listItemType = state.currentList.type;
     state.currentList.isInProgress = false;
     state.currentList.type = '';
-    return '</' + listItemType + '></div>\n';
+    appendCurrentOutputLine('</' + listItemType + '>');
   }
-  return '';
 }
 
-function wrap(bodyHtml) {
+function appendCurrentOutputLine(str) {
+  state.outputLines[state.outputLines.length - 1] += str;
+}
+
+function wrapWithHeaderFooter(bodyHtml) {
   var headerHtml = HtmlService.createHtmlOutputFromFile('header').getContent();
   var footerHtml = HtmlService.createHtmlOutputFromFile('footer').getContent();
   return headerHtml + '\n' + bodyHtml + '\n' + footerHtml;
 }
 
-function showResult(resultStr) {
+function showResult() {
+  var resultStr = '<div>' + state.outputLines.join('</div>\n<div>') + '</div>'
+  resultStr = wrapWithHeaderFooter(resultStr);
   if(state.testMode) {
     Logger.log(resultStr);
   } else {
