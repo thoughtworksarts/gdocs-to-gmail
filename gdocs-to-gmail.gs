@@ -12,7 +12,9 @@ var state = {
     type: '',
     items: []
   },
+  subjectLine: '',
   outputLines: [],
+  subjectLineMarker: 'Subject: ',
   rangeMarkers: {
     begin: '===CUSTOM_EMAIL_CONTENTS_BEGIN===',
     end: '===CUSTOM_EMAIL_CONTENTS_END==='
@@ -44,6 +46,7 @@ function convertToGmail() {
   var numElements = state.body.getNumChildren();
   for(var i = 0; i < numElements; i++) {
     assignCurrentElement(state.body.getChild(i));
+    getSubjectLineWhenDetected();
     deactivateProcessingOnRangeEnd();
     processWhileActive();
     activateProcessingOnRangeBegin();
@@ -55,6 +58,12 @@ function convertToGmail() {
 function assignCurrentElement(element) {
     state.currentElement.obj = element;
     state.currentElement.text = element.asText().getText();
+}
+
+function getSubjectLineWhenDetected() {
+  if(state.currentElement.text && state.currentElement.text.startsWith(state.subjectLineMarker)) {
+    state.subjectLine = state.currentElement.text.replace(state.subjectLineMarker, '');
+  }
 }
 
 function activateProcessingOnRangeBegin() {
@@ -208,10 +217,15 @@ function removeDuplications(bodyHtml) {
   return bodyHtml;
 }
 
+function prependSubjectLine(bodyHtml) {
+  return state.subjectLine + '\n\n' + bodyHtml;
+}
+
 function showResult() {
   var str = state.outputLines.join('\n');
   str = removeDuplications(str);
   str = wrapWithHeaderFooter(str);
+  str = prependSubjectLine(str);
   if(state.testMode) {
     Logger.log(str);
   } else {
