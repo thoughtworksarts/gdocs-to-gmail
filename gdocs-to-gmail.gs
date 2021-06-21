@@ -12,12 +12,18 @@ var state = {
     type: '',
     items: []
   },
-  subjectLine: '',
+  meta: {
+    to: '',
+    bcc: '',
+    subjectLine: '',
+  },
   outputLines: [],
-  subjectLineMarker: 'Subject: ',
-  rangeMarkers: {
-    begin: '===CUSTOM_EMAIL_CONTENTS_BEGIN===',
-    end: '===CUSTOM_EMAIL_CONTENTS_END==='
+  markers: {
+    to: 'To: ',
+    bcc: 'Bcc: ',
+    subjectLine: 'Subject: ',
+    bodyBegin: '===CUSTOM_EMAIL_CONTENTS_BEGIN===',
+    bodyEnd: '===CUSTOM_EMAIL_CONTENTS_END==='
   }
 }
 
@@ -46,7 +52,7 @@ function convertToGmail() {
   var numElements = state.body.getNumChildren();
   for(var i = 0; i < numElements; i++) {
     assignCurrentElement(state.body.getChild(i));
-    getSubjectLineWhenDetected();
+    getMetaData();
     deactivateProcessingOnRangeEnd();
     processWhileActive();
     activateProcessingOnRangeBegin();
@@ -60,20 +66,28 @@ function assignCurrentElement(element) {
     state.currentElement.text = element.asText().getText();
 }
 
-function getSubjectLineWhenDetected() {
-  if(state.currentElement.text && state.currentElement.text.startsWith(state.subjectLineMarker)) {
-    state.subjectLine = state.currentElement.text.replace(state.subjectLineMarker, '');
+function getMetaData() {
+  if(state.currentElement.text.startsWith(state.markers.to)) {
+    state.meta.to = state.currentElement.text.replace(state.markers.to, '');
+  }
+
+  if(state.currentElement.text.startsWith(state.markers.bcc)) {
+    state.meta.bcc = state.currentElement.text.replace(state.markers.bcc, '');
+  }
+
+  if(state.currentElement.text.startsWith(state.markers.subjectLine)) {
+    state.meta.subjectLine = state.currentElement.text.replace(state.markers.subjectLine, '');
   }
 }
 
 function activateProcessingOnRangeBegin() {
-  if(state.currentElement.text === state.rangeMarkers.begin) {
+  if(state.currentElement.text === state.markers.bodyBegin) {
     state.isProcessingActive = true;
   }
 }
 
 function deactivateProcessingOnRangeEnd() {
-  if(state.currentElement.text === state.rangeMarkers.end) {
+  if(state.currentElement.text === state.markers.bodyEnd) {
     state.isProcessingActive = false;
   }
 }
@@ -217,15 +231,19 @@ function removeDuplications(bodyHtml) {
   return bodyHtml;
 }
 
-function prependSubjectLine(bodyHtml) {
-  return state.subjectLine + '\n\n' + bodyHtml;
+function prependMetaData(bodyHtml) {
+  var str = '';
+  str += 'to: ' + state.meta.to + '\n';
+  str += 'bcc: ' + state.meta.bcc + '\n';
+  str += state.meta.subjectLine + '\n';
+  return str + '\n' + bodyHtml;
 }
 
 function showResult() {
   var str = state.outputLines.join('\n');
   str = removeDuplications(str);
   str = wrapWithHeaderFooter(str);
-  str = prependSubjectLine(str);
+  str = prependMetaData(str);
   if(state.testMode) {
     Logger.log(str);
   } else {
