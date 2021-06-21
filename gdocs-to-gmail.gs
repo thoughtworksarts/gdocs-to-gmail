@@ -144,7 +144,7 @@ function openListIfNeeded() {
     var listItem = state.currentElement.obj.asListItem();
     state.currentList.isInProgress = true;
     state.currentList.type = listItem.getGlyphType() === DocumentApp.GlyphType.NUMBER ? 'ol' : 'ul';
-    state.outputLines.push('<' + state.currentList.type + '>\n');
+    state.outputLines.push('<' + state.currentList.type + ' style="margin-bottom: 0; margin-top: 0;">\n');
   }
 }
 
