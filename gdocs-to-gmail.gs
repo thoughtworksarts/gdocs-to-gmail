@@ -112,7 +112,7 @@ function processParagraph(paragraph) {
 
 function processHeading(textElement) {
   var str = textElement.getText();
-  state.outputLines.push('<font size="4"><b>' + str + '</b></font>');
+  state.outputLines.push('<br><font size="4"><b>' + str + '</b></font>');
 }
 
 function processText(textElement) {
