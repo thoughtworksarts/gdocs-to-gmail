@@ -128,11 +128,13 @@ function parseText(textElement) {
 
     html += attribute.BOLD ? '<b>' : '';
     html += attribute.ITALIC ? '<i>' : '';
+    html += attribute.UNDERLINE && !attribute.LINK_URL ? '<u>' : '';
     html += attribute.LINK_URL ? '<a href="' + attribute.LINK_URL + '">' : '';
     html += substring;
     html += attribute.LINK_URL ? '</a>' : '';
-    html += attribute.BOLD ? '</b>' : '';
+    html += attribute.UNDERLINE && !attribute.LINK_URL ? '</u>' : '';
     html += attribute.ITALIC ? '</i>' : '';
+    html += attribute.BOLD ? '</b>' : '';
   }
   state.outputLines.push(html);
 }
