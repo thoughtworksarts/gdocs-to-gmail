@@ -93,7 +93,7 @@ function process(element) {
 
 function processParagraph(paragraph) {
   var numChildren = paragraph.getNumChildren();
-  if(numChildren === 0) state.outputLines.push('<br>');
+  if(numChildren === 0) pushNewOutputLine('<br>');
 
   for(var i = 0; i < numChildren; i++) {
     var element = paragraph.getChild(i);
@@ -112,18 +112,18 @@ function processParagraph(paragraph) {
 
 function processHeading(textElement) {
   var str = textElement.getText();
-  state.outputLines.push('<br><font size="4"><b>' + str + '</b></font>');
+  pushNewOutputLine('<br><font size="4"><b>' + str + '</b></font>');
 }
 
 function processText(textElement) {
-  state.outputLines.push(parseText(textElement));
+  pushNewOutputLine(parseText(textElement));
 }
 
 function processInlineImage(inlineImage) {
   var html = '[ -------- INLINE IMAGE -------- ]';
   var link = inlineImage.getLinkUrl();
   html += link ? '<br>[ Link to: ' + link + ' ]' : '';
-  state.outputLines.push(html);
+  pushNewOutputLine(html);
 }
 
 function processListItem(listItem) {
@@ -147,7 +147,7 @@ function openListIfNeeded() {
     var listItem = state.currentElement.obj.asListItem();
     state.currentList.isInProgress = true;
     state.currentList.type = listItem.getGlyphType() === DocumentApp.GlyphType.NUMBER ? 'ol' : 'ul';
-    state.outputLines.push('<' + state.currentList.type + ' style="margin-bottom: 0; margin-top: 0;">\n');
+    pushNewOutputLine('<' + state.currentList.type + ' style="margin-bottom: 0; margin-top: 0;">\n');
   }
 }
 
@@ -185,6 +185,10 @@ function parseText(textElement) {
   return html.replace('\r', '<br>');
 }
 
+function pushNewOutputLine(str) {
+  state.outputLines.push('<div>' + str + '</div>');
+}
+
 function appendCurrentOutputLine(str) {
   state.outputLines[state.outputLines.length - 1] += str;
 }
@@ -203,12 +207,12 @@ function removeDuplications(bodyHtml) {
 }
 
 function showResult() {
-  var resultStr = '<div>' + state.outputLines.join('</div>\n<div>') + '</div>';
-  resultStr = removeDuplications(resultStr);
-  resultStr = wrapWithHeaderFooter(resultStr);
+  var str = state.outputLines.join('\n');
+  str = removeDuplications(str);
+  str = wrapWithHeaderFooter(str);
   if(state.testMode) {
-    Logger.log(resultStr);
+    Logger.log(str);
   } else {
-    DocumentApp.getUi().alert(resultStr);
+    DocumentApp.getUi().alert(str);
   }
 }
