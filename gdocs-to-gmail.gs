@@ -136,7 +136,7 @@ function processListItem(listItem) {
         break;
     }
   }
-  appendCurrentOutputLine('<li>' + html + '</li>\n');
+  appendCurrentOutputLine('<li style="margin-left: 0;">' + html + '</li>\n');
 }
 
 function openListIfNeeded() {
