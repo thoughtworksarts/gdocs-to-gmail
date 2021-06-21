@@ -192,8 +192,16 @@ function wrapWithHeaderFooter(bodyHtml) {
   return headerHtml + '\n' + bodyHtml + '\n' + footerHtml;
 }
 
+function removeDuplications(bodyHtml) {
+  bodyHtml = bodyHtml.replace(/<\/b><b>/g, '');
+  bodyHtml = bodyHtml.replace(/<\/i><i>/g, '');
+  bodyHtml = bodyHtml.replace(/<\/u><u>/g, '');
+  return bodyHtml;
+}
+
 function showResult() {
-  var resultStr = '<div>' + state.outputLines.join('</div>\n<div>') + '</div>'
+  var resultStr = '<div>' + state.outputLines.join('</div>\n<div>') + '</div>';
+  resultStr = removeDuplications(resultStr);
   resultStr = wrapWithHeaderFooter(resultStr);
   if(state.testMode) {
     Logger.log(resultStr);
