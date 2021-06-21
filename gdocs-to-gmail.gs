@@ -170,7 +170,7 @@ function openListIfNeeded() {
     var listItem = state.currentElement.obj.asListItem();
     state.currentList.isInProgress = true;
     state.currentList.type = listItem.getGlyphType() === DocumentApp.GlyphType.NUMBER ? 'ol' : 'ul';
-    pushNewOutputLine('<' + state.currentList.type + ' style="margin-bottom: 0; margin-top: 0;">\n');
+    pushNewOutputLine('<div><' + state.currentList.type + ' style="margin-bottom: 0; margin-top: 0;">\n', false);
   }
 }
 
@@ -179,7 +179,7 @@ function closeListIfNeeded() {
     var listItemType = state.currentList.type;
     state.currentList.isInProgress = false;
     state.currentList.type = '';
-    appendCurrentOutputLine('</' + listItemType + '>');
+    appendCurrentOutputLine('</' + listItemType + '></div>');
   }
 }
 
@@ -208,10 +208,15 @@ function parseText(textElement) {
   return html.replace('\r', '<br>');
 }
 
-function pushNewOutputLine(str) {
-  var alignment = state.currentElement.obj.getAlignment();
-  var attributesStr = alignment === DocumentApp.HorizontalAlignment.CENTER ? ' style="text-align: center;"' : '';
-  state.outputLines.push('<div' + attributesStr + '>' + str + '</div>');
+function pushNewOutputLine(str, needsDivs=true) {
+  var divBegin = '', divEnd = '';
+  if(needsDivs) {
+    var alignment = state.currentElement.obj.getAlignment();
+    var attributesStr = alignment === DocumentApp.HorizontalAlignment.CENTER ? ' style="text-align: center;"' : '';
+    divBegin = '<div' + attributesStr + '>';
+    divEnd = '</div>';
+  }
+  state.outputLines.push(divBegin + str + divEnd);
 }
 
 function appendCurrentOutputLine(str) {
