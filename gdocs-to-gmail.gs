@@ -186,7 +186,9 @@ function parseText(textElement) {
 }
 
 function pushNewOutputLine(str) {
-  state.outputLines.push('<div>' + str + '</div>');
+  var alignment = state.currentElement.obj.getAlignment();
+  var attributesStr = alignment === DocumentApp.HorizontalAlignment.CENTER ? ' style="text-align: center;"' : '';
+  state.outputLines.push('<div' + attributesStr + '>' + str + '</div>');
 }
 
 function appendCurrentOutputLine(str) {
