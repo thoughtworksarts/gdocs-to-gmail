@@ -120,7 +120,10 @@ function processText(textElement) {
 }
 
 function processInlineImage(inlineImage) {
-  state.outputLines.push('INLINE IMAGE');
+  var html = '[ -------- INLINE IMAGE -------- ]';
+  var link = inlineImage.getLinkUrl();
+  html += link ? '<br>[ Link to: ' + link + ' ]' : '';
+  state.outputLines.push(html);
 }
 
 function processListItem(listItem) {
